@@ -1,0 +1,218 @@
+<?php
+/**
+ * WooCommerce Music Library Template Functions.
+ *
+ * @package storefront
+ */
+
+/**
+ * Music Library Filters
+ * Output the Music Library filters
+ *
+ * @since   1.0.0
+ *
+ * @param   array $taxonomies The Taxonomies to display as filters
+ * @return  void
+ */
+function storefront_music_library_filters($taxonomies = array()) {
+  $taxonomies = array('artist', 'duration', 'genre', 'instrument', 'mood', 'tempo');
+
+  $nonce_get_posts = wp_create_nonce('ml_nonce_get_posts');
+  $attribute_array = array();
+  $attribute_terms  = array();
+  $attribute_taxonomies = wc_get_attribute_taxonomies();
+
+  if ( ! empty( $attribute_taxonomies ) ) {
+    foreach ( $attribute_taxonomies as $tax ) {
+      if ( taxonomy_exists( wc_attribute_taxonomy_name( $tax->attribute_name ) ) && in_array( $tax->attribute_name, $taxonomies ) ) {
+        $attribute_array[ $tax->attribute_name ] = $tax->attribute_label;
+      }
+    }
+  }
+
+  if ( ! empty( $attribute_array ) ) {
+    foreach ( $attribute_array as $k => $v ) {
+      // get taxonomy
+      $attribute_terms[$k] = get_terms( array('taxonomy' => wc_attribute_taxonomy_name($k), 'hide_empty' => false) );
+    }
+  }
+
+  if ( ! empty( $attribute_terms ) ) {
+    echo '<form id="music-library-filters">';
+      foreach ( $attribute_terms as $key => $terms ) {
+        $attr_label = wc_attribute_label(wc_attribute_taxonomy_name($key));
+        echo '<label>';
+          esc_html_e($attr_label);
+          echo '<select name="'. esc_attr($key) .'" data-taxonomy-name="'. wc_attribute_taxonomy_name($key) .'">';
+            // use key as label and first option
+            echo '<option value="">Select '. esc_html( $attr_label ) .'...</option>';
+            foreach ( $terms as $term ) {
+              echo '<option value="'. esc_attr( $term->slug ) .'">'. esc_html( $term->name ) .'</option>';
+            }
+          echo '</select>';
+        echo '</label>';
+      }
+      echo '<input id="nonce-get-posts" type="hidden" value="'. esc_attr($nonce_get_posts) .'">';
+      echo '<input type="submit" class="button" value="Filter">';
+    echo '</form>';
+  }
+
+  // echo '<pre>';
+  //   var_dump(wc_attribute_label(wc_attribute_taxonomy_name('duration')));
+  // echo '</pre>';
+  // echo '<pre>Attr Tax Labels';
+  //   var_dump(wc_get_attribute_taxonomy_labels());
+  // echo '</pre>';
+  // echo '<pre>Attr Array';
+  //   var_dump($attribute_array);
+  // echo '</pre>';
+  // echo '<pre>Attr Terms';
+  //   var_dump($attribute_terms);
+  // echo '</pre>';
+
+  // echo '<pre>';
+  //   $json = json_decode('[{"taxName":"pa_artist","termValue":"artist-2"},{"taxName":"pa_duration","termValue":"duration-2"},{"taxName":"pa_genre","termValue":"genre-2"},{"taxName":"pa_instrument","termValue":"instrument-1"},{"taxName":"pa_mood","termValue":"mood-2"},{"taxName":"pa_tempo","termValue":"tempo-1"}]');
+  //   $filtered = array();
+  //   foreach ($json as $k => $v) {
+  //     // check if tampered...
+  //     if (! isset($v->taxName) || ! isset($v->termValue)) {
+  //       break;
+  //     }
+  //     $filtered[] = array(
+  //       'taxName' => sanitize_text_field($v->taxName),
+  //       'termValue' => sanitize_text_field($v->termValue)
+  //     );
+  //   }
+  //   // var_dump($filtered);
+
+  //   $filter_args = array();
+  //   foreach ($filtered as $v) {
+  //     $filter_args[] = array(
+  //       'taxonomy' => $v['taxName'],
+  //       'terms'    => array( $v['termValue'] ),
+  //       'field'    => 'slug',
+  //       'operator' => 'IN',
+  //     );
+  //   }
+
+  //   $tax_query = array( 
+  //     'relation' => 'AND',
+  //     array(
+  //       'field'    => 'name',
+  //       'operator' => 'NOT IN',
+  //       'taxonomy' => 'product_visibility',
+  //       'terms'    => array( 'exclude-from-catalog' ),
+  //     )
+  //   );
+
+  //   $merged = array_merge($tax_query, $filter_args);
+
+  //   var_dump($merged);
+  // echo '</pre>';
+}
+
+
+/**
+ * Music Library List
+ * Output the Music Library list
+ *
+ * @since   1.0.0
+ * @return  void
+ */
+function storefront_music_library_list() {
+  // initial product query
+  $page = 1;
+  $args = array(
+    'posts_per_page' => 2,
+    'paginate' => true,
+    'page' => $page,
+    'return' => 'ids',
+    'tax_query' => array( 
+      'relation' => 'AND',
+      array(
+        'field'    => 'name',
+        'operator' => 'NOT IN',
+        'taxonomy' => 'product_visibility',
+        'terms'    => array( 'exclude-from-catalog' ),
+      ),
+    )
+  );
+  $q = new WC_Product_Query($args);
+  $q_result = $q->get_products();
+  $products = $q_result->products;
+  $total    = $q_result->total;
+  $max_num_pages = $q_result->max_num_pages;
+  ?>
+  <div id="music-library-list">
+    <?php
+    if (count($products)) :
+    ?>
+      <div id="music-library-list__table">
+        <div class="music-library-list__header">
+          <div class="music-library-list__row">
+            <div class="music-library-list__cell">Title</div>
+            <div class="music-library-list__cell">Artist</div>
+            <div class="music-library-list__cell">Length</div>
+            <div class="music-library-list__cell">Genre</div>
+            <div class="music-library-list__cell">Mood</div>
+            <div class="music-library-list__cell">Actions</div>
+          </div>
+        </div>
+        <div class="music-library-list__body">
+          <?php
+          foreach($products as $key => $id) :
+            // echo '<pre>';
+              // var_dump(get_post_meta($id, '_product_attributes'));
+            // echo '</pre>';
+            
+            $title  = get_the_title($id);
+            $artist = wc_get_product_terms($id, 'pa_artist', array('fields' => 'names'))[0];
+            $length = wc_get_product_terms($id, 'pa_duration', array('fields' => 'names'))[0];
+            $genre  = wc_get_product_terms($id, 'pa_genre', array('fields' => 'names'))[0];
+            $inst   = wc_get_product_terms($id, 'pa_instrument', array('fields' => 'names'))[0];
+            $mood   = wc_get_product_terms($id, 'pa_mood', array('fields' => 'names'))[0];
+            $tempo  = wc_get_product_terms($id, 'pa_tempo', array('fields' => 'names'))[0];
+            $preview_song_url = get_field('preview_song_file', $id);
+          ?>
+            <div class="music-library-list__row" data-song-id="<?php esc_attr_e($id) ?>">
+              <div class="music-library-list__cell">
+                <button 
+                  class="btn music-list__btn-play-pause" 
+                  data-song-id="<?php esc_attr_e($id) ?>" 
+                  data-song-url="<?php esc_attr_e($preview_song_url) ?>">
+                  Play
+                </button>
+                <a href="#"><?php esc_html_e($title) ?></a>
+              </div>
+              <div class="music-library-list__cell"><?php esc_html_e($artist) ?></div>
+              <div class="music-library-list__cell"><?php esc_html_e($length) ?></div>
+              <div class="music-library-list__cell"><?php esc_html_e($genre) ?></div>
+              <div class="music-library-list__cell"><?php esc_html_e($mood) ?></div>
+              <div class="music-library-list__cell">
+                <button type="button" class="btn btn--favorite" data-song-id="<?php esc_attr_e($id) ?>">Favorite</button>
+                <button type="button" class="btn btn--license" data-song-id="<?php esc_attr_e($id) ?>">License</button>
+              </div>
+            </div>
+          <?php
+          endforeach;
+          ?>
+        </div>
+      </div>
+
+      <div class="music-library-list__pagination">
+        <button 
+          class="btn btn--load-more" 
+          style="<?php echo ($page < $max_num_pages) ? '' : 'display: none;' ?>">
+          Load More
+        </button>
+      </div>
+    <?php
+    else:
+      echo '<p>No Products Found.</p>';
+    endif;
+    ?>
+  </div>
+  <?php
+}
+
+

@@ -1,0 +1,618 @@
+'use strict';
+
+(function() {
+
+  const licenseDialog = (function() {
+
+    const ID_BTN_ADD_TO_CART    = 'btn-add-to-cart';
+    const ID_CLOSE_DIALOG       = 'btn-close-license-dialog';
+    const ID_LICENSE_DIALOG     = 'license-dialog';
+    const ID_PRODUCT_VARIATIONS = 'product-variations';
+    const ID_VARIATION_PRICE    = 'product-variation-price';
+    const CLASS_ARTIST          = 'license-dialog__song-artist';
+    const CLASS_IMAGE           = 'license-dialog__song-image';
+    const CLASS_LINK            = 'license-dialog__song-link';
+    const CLASS_TITLE           = 'license-dialog__song-title';
+
+    let $body,
+        $licenseDialog,
+        $btnAddToCart,
+        $productVariations,
+        $selects,
+        $songArtist,
+        $songImage,
+        $songLink,
+        $songTitle,
+        $variationPrice;
+
+    let state = {
+      'productId'       : null,
+      'termData'        : null,
+      'variations'      : null,
+      'variationAttrs'  : null,
+      'variationLabels' : null,
+      'selectedAttrs'   : null // selected Product Variation attributes (drill down)
+    };
+
+    function init() {
+      cacheDom();
+      bindEvents();
+    }
+
+    function cacheDom() {
+      $body              = jQuery('body');
+      $licenseDialog     = $body.find('#' + ID_LICENSE_DIALOG);
+      $btnAddToCart      = $licenseDialog.find('#' + ID_BTN_ADD_TO_CART);
+      $productVariations = $licenseDialog.find('#' + ID_PRODUCT_VARIATIONS);
+      $songArtist        = $licenseDialog.find('.' + CLASS_ARTIST);
+      $songImage         = $licenseDialog.find('.' + CLASS_IMAGE + ' img');
+      $songLink          = $licenseDialog.find('.' + CLASS_LINK);
+      $songTitle         = $licenseDialog.find('.' + CLASS_TITLE);
+      $variationPrice    = $licenseDialog.find('#' + ID_VARIATION_PRICE);
+    }
+
+    function bindEvents() {
+      $songLink.on('click', handleClickSongLink);
+      $btnAddToCart.on('click', handleAddToCartClick);
+      $licenseDialog.on('change', 'select', handleSelectChange);
+
+      events.on('clickLicense', handleLicenseClick, this);
+      events.on('getProductVariationsDone', handleGetProductVariationsDone, this);
+      events.on('addVariationToCartDone', handleAddVariationToCartDone, this);
+      events.on('mfpCloseLicenseDialog', handleCloseDialog, this);
+    }
+
+    function handleClickSongLink(e) {
+      e.preventDefault();
+      events.trigger('clickPlayPauseList', e);
+    }
+
+    function handleAddToCartClick(e) {
+      console.log('handleAddToCartClick');
+      e.preventDefault();
+
+      let product_id     = this.dataset.productId;
+      let quantity       = this.dataset.quantity;
+      let variation_id   = this.dataset.variationId;
+      let variation_data = this.dataset.variationData; // displayed on cart.php if included
+      let data = {
+        'product_id'     : product_id,
+        'quantity'       : quantity,
+        'variation_id'   : variation_id,
+        'variation_data' : variation_data
+      };
+
+      // trigger jQuery WooCommerce events
+      $body.trigger('adding_to_cart', [jQuery(this), data]);
+
+      addToCart(product_id, quantity, variation_id, variation_data);
+    }
+
+    function addToCart(product_id, quantity, variation_id, variation_data) {
+      jQuery.ajax({
+        url      : ml_js_data.ajax_url,
+        method   : 'POST',
+        dataType : 'json',
+        data     : {
+          'action'         : 'ml_add_to_cart_variation',
+          'product_id'     : product_id,
+          'quantity'       : quantity,
+          'variation_id'   : variation_id,
+          'variation_data' : variation_data,
+          'nonce'          : ml_js_data.nonce_add_to_cart_variation
+        }
+      })
+      .done(function(data, textStatus, jqXHR) {
+        console.log('addToCart data', data);
+
+        if (data.error && data.product_url) {
+          window.location = data.product_url;
+          console.log('error, redirecting');
+        } else {
+          // trigger jQuery WooCommerce event
+          $body.trigger('added_to_cart', [data.fragments, data.cart_hash, ]);
+        }
+
+        events.trigger('addVariationToCartDone', data);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        console.log('addToCart fail', errorThrown);
+      });
+    }
+
+    function handleAddVariationToCartDone(data) {
+      console.log('handleAddVariationToCartDone', data);
+      reset();
+      events.trigger('closeLicenseDialog', state.productId);
+    }
+
+    function handleCloseDialog() {
+      reset();
+      events.trigger('closeLicenseDialog', state.productId);
+    }
+
+    function handleSelectChange(e) {
+      // save / remove <select> id from state
+      if (e.target.options[e.target.selectedIndex].value) {
+        utils.setState({
+          'selectedAttrs' : {
+            ...state.selectedAttrs,
+            [e.target.id] : e.target.options[e.target.selectedIndex].value
+          }
+        }, state);
+      } else {
+        utils.setState({
+          'selectedAttrs' : {
+            ...state.selectedAttrs,
+            [e.target.id] : null
+          }
+        }, state);
+      }
+
+      // resets all selects to all default values
+      if (maybeResetVariationValues()) {
+        console.log('variationValuesReset');
+        return;
+      }
+
+      productDrillDown(state.selectedAttrs, e);
+
+      maybeToggleAddToCartButton();
+    }
+
+    function maybeToggleAddToCartButton() {
+      let toggle = true;
+      $selects.each(function() {
+        if (! this.value) {
+          toggle = false;
+          return false; // break .each()
+        }
+      });
+      toggleAddToCartButton(toggle);
+    }
+
+    function toggleAddToCartButton(enable) {
+      if (enable) {
+        // get varation data
+        const variation_data = getProductVariationDataBySelectedAttributes();
+        // enable
+        $btnAddToCart.removeAttr('disabled');
+        // update variation price with Product data
+        updateVariationPrice(variation_data);
+        // show variation price
+        showVariationPrice();
+        // update button with Product data
+        updateAddToCartButtonData(variation_data);
+      } else {
+        // disable
+        $btnAddToCart.attr('disabled', '');
+        // hide variation price
+        hideVariationPrice();
+        // reset variation price
+        resetVariationPrice();
+        // reset button data
+        resetAddToCartButtonData();
+      }
+    }
+
+    function updateVariationPrice(variation_data) {
+      // const variation_data = getProductVariationDataBySelectedAttributes();
+      $variationPrice.html(variation_data.price_html);
+    }
+
+    function resetVariationPrice() {
+      $variationPrice.empty();
+    }
+
+    function showVariationPrice() {
+      $variationPrice.css('display', 'block');
+    }
+
+    function hideVariationPrice() {
+      $variationPrice.css('display', 'none');
+    }
+
+    function updateAddToCartButtonData(variation_data) {
+      let product_id      = state.productId;
+      // let variation_id   = getProductVariationIdBySelectedAttributes();
+      let variation_id    = variation_data.variation_id;
+      let quantity        = 1;
+      let variation_attrs = JSON.stringify(variation_data.attributes); // array displayed on cart.php
+
+      $btnAddToCart.attr('data-product-id', product_id);
+      $btnAddToCart.attr('data-variation-id', variation_id);
+      $btnAddToCart.attr('data-quantity', quantity);
+      $btnAddToCart.attr('data-variation-data', variation_attrs);
+    }
+
+    function resetAddToCartButtonData() {
+      $btnAddToCart.attr('data-product-id', '');
+      $btnAddToCart.attr('data-variation-id', '');
+      $btnAddToCart.attr('data-quantity', '0');
+      $btnAddToCart.attr('data-variation-data', '');
+    }
+
+    function handleLicenseClick(data) {
+      // reset existing product variations and license dialog
+      reset();
+
+      // get product variations
+      getProductVariations(data.id);
+
+      // render product details
+      renderProductDetails(data);
+
+      // show();
+    }
+
+    function handleGetProductVariationsDone(data) {
+      render(data);
+    }
+
+    function getProductVariations(id) {
+      jQuery.ajax({
+        url      : ml_js_data.ajax_url,
+        method   : 'POST',
+        dataType : 'json',
+        data     : {
+          'action' : 'ml_get_product_variations',
+          'id'     : id,
+          'nonce'  : ml_js_data.nonce_get_product
+        }
+      })
+      .done(function(data, textStatus, jqXHR) {
+        console.log('getProductVariations data', data);
+
+        utils.setState({
+          'productId'       : data.data.product_id,
+          'termData'        : data.data.term_data,
+          'variations'      : data.data.variations,
+          'variationAttrs'  : data.data.variation_attrs,
+          'variationLabels' : data.data.variation_labels
+        }, state);
+
+        events.trigger('getProductVariationsDone', state);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        console.log('getProductVariations fail', errorThrown);
+      });
+    }
+
+    function getProductVariationDataBySelectedAttributes() {
+      // create an array of the selected attributes
+      let attrs = [];
+      for (const prop in state.selectedAttrs) {
+        if (state.selectedAttrs.hasOwnProperty(prop)) {
+          attrs.push(state.selectedAttrs[prop]);
+        }
+      }
+
+      let index = collectProductVariationsByValues(attrs);
+
+      let variation_data = state.variations[index];
+
+      return variation_data || null;
+    }
+
+    function getProductVariationIdBySelectedAttributes() {
+      let variation_data = getProductVariationDataBySelectedAttributes();
+      let variation_id = variation_data.variation_id;
+
+      return variation_id || null;
+    }
+
+    /**
+     * Filter the Product Variations
+     * @param {object} selectedAttrs the selected attributes
+     * @param {object} e the <select> `change` event
+     */
+    function productDrillDown(selectedAttrs, e) {
+      console.log('productDrillDown', selectedAttrs);
+
+      // collect all product variations that match value(s)
+      let attrValues = [];
+      let allAttributes = null;
+      let matches = null;
+
+      for (const prop in selectedAttrs) {
+        if (null !== selectedAttrs[prop]) {
+          attrValues.push(selectedAttrs[prop]);
+        }
+      }
+
+      matches = collectProductVariationsByValues(attrValues);
+
+      // collect all product variation attributes
+      if (matches && matches.length) {
+        allAttributes = collectProductVariationAttributes(matches);
+      } else {
+        // no matching Product Variations
+        // reset all <select>s except the last selected one
+        resetSelectedAttributes(e.target.id);
+
+        // search for Product Variations by the last selected <select>
+        matches = collectProductVariationsByValues([state.selectedAttrs[e.target.id]]);
+        allAttributes = collectProductVariationAttributes(matches);
+      }
+
+      // re-render available options
+      updateVariationValues(allAttributes);
+    }
+
+    /**
+     * Reset Selected Attributes
+     *
+     * @param {string} selectId the <select> ID to skip resetting
+     */
+    function resetSelectedAttributes(selectId) {
+      for (const prop in state.selectedAttrs) {
+        if (state.selectedAttrs.hasOwnProperty(prop)) {
+          if (selectId === prop) {
+            continue;
+          } else {
+            utils.setState({
+              'selectedAttrs' : {
+                ...state.selectedAttrs,
+                [prop] : null
+              }
+            }, state)
+          }
+        }
+      }
+      console.log('resetSelectedAttributes', state.selectedAttrs);
+    }
+
+    /**
+     * Collect Product Variations by Values
+     * @param {array} values the values to search for
+     * @return boolean|array Product Variation indexes matching test
+     */
+    function collectProductVariationsByValues(values) {
+      console.log('collectProdVarsByVals', values);
+      if (! state.variations) {
+        return false;
+      }
+
+      let variationMatches = []; // variation index matches
+
+      // search each product variation
+      for (let i = 0; i < state.variations.length; i++) {
+        let _attrs = state.variations[i].attributes;
+        let attrMatches = 0; // how many matches found
+
+        // search for each value
+        for (let j = 0; j < values.length; j++) {
+          // search each attribute for each value
+          for (let prop in _attrs) {
+            if (values[j] === _attrs[prop]) {
+              // increment attrMatches
+              attrMatches++;
+              break; // break _attr loop and search for next value;
+            } // values[j] === attribute
+          } // attributes
+
+          // if all values have been found
+          if (attrMatches === values.length) {
+            // save this variation index to variationMatches
+            variationMatches.push(i);
+            break; // break and search next product variation
+          }
+        } // values
+      } // variations
+
+      return variationMatches;
+    }
+
+    /**
+     * Collect Product Variations by Value
+     * @param array
+     * @return boolean|array Product IDs matching test
+     */
+    function collectProductVariationsByValue(value) {
+      console.log('collectProdVarsByVal', value);
+      if (! state.variations) {
+        return false;
+      }
+
+      let matches = [];
+
+      for (let i = 0; i < state.variations.length; i++) {
+        let _attrs = state.variations[i].attributes;
+
+        for (let prop in _attrs) {
+          console.log('prop in attrs', prop);
+          if (value === _attrs[prop]) {
+            console.log('value:', value, ' === ', _attrs[prop]);
+            // save id to matches
+            matches.push(i);
+            // break
+            break;
+          }
+        }
+      }
+
+      console.log('matches', matches);
+      return matches;
+    }
+
+    /**
+     * Collect All Product Variation Attributes by Product Variation IDs
+     * @param array
+     * @return boolean|array Product IDs matching test
+     */
+    function collectProductVariationAttributes(productIds) {
+      let allAttributes = {};
+      for (let i = 0; i < productIds.length; i++) {
+        let index = productIds[i]; // the index of the matched Product Variation
+        console.log('matched index: ', index);
+
+        // iterate through variation attributes object
+        let _attrs = state.variations[index].attributes;
+        for (let prop in _attrs) {
+          // check if key exists in allAttributes object
+          if (! allAttributes[prop]) {
+            // add it as new key and initialize it as array
+            allAttributes[prop] = [];
+            // add current value to array
+            allAttributes[prop].push(_attrs[prop]);
+          } else {
+            // key already exists in allAttributes object
+            // test for value uniqueness
+            for (let j = 0; j < allAttributes[prop].length; j++) {
+              // if value is unique, add it to the array
+              if (_attrs[prop] !== allAttributes[prop][j]) {
+                allAttributes[prop].push(_attrs[prop]);
+                break;
+              }
+            }
+          }
+        }
+      }
+      console.log('allAttributes', allAttributes);
+      return allAttributes;
+    }
+
+    /**
+     * Render the Product Variation Attributes
+     * @param {object} data the data to render
+     */
+    function render(data) {
+      for (const attr in data.variationAttrs) {
+        // create a <div> for each attributes
+        let div = document.createElement('div');
+        div.className = 'select-wrap';
+
+        // create a <label> for each attribute
+        let label = document.createElement('label');
+        label.htmlFor = 'select-' + attr;
+        label.className = 'visuallyhidden';
+        label.appendChild(document.createTextNode(data.variationLabels[attr]));
+
+        // create a <select> for each attribute
+        let select = document.createElement('select');
+        select.id = 'select-' + attr;
+
+        // create the default <option> for this <select>
+        let optionDefault = document.createElement('option');
+        optionDefault.value = '';
+        optionDefault.appendChild(document.createTextNode(data.variationLabels[attr] + '...'));
+        select.appendChild(optionDefault);
+
+        // create an <option> for each term
+        for (let i = 0, terms = data.variationAttrs[attr]; i < terms.length; i++) {
+          let option = document.createElement('option');
+          option.value = terms[i];
+          option.appendChild(document.createTextNode(data.termData[terms[i]]));
+          select.appendChild(option);
+        }
+
+        div.appendChild(label);
+        div.appendChild(select);
+        $productVariations.append(div);
+        // $productVariations.append(select);
+        // $selects = null;
+        // $selects = $productVariations.find('select');
+      }
+      // cache <select> els
+      $selects = $productVariations.find('select');
+    }
+
+    /**
+     * Update Product Variation values
+     * @param {object} attributes the Product Variation Attributes
+     */
+    function updateVariationValues(attributes) {
+      for (const prop in attributes) {
+        // get selectId
+        let selectId = prop.replace('attribute_' ,'select-');
+
+        // skip <select> els with value
+        if (state.selectedAttrs[selectId]) {
+          continue;
+        }
+
+        let $select = jQuery('#' + selectId);
+        let defaultSelect = $select.get(0).options[0];
+
+        $select.empty()
+        $select.append(defaultSelect);
+
+        // create an <option> for each term
+        for (let j = 0, terms = attributes[prop]; j < terms.length; j++) {
+          let option = document.createElement('option');
+          option.value = terms[j];
+          option.appendChild(document.createTextNode(state.termData[terms[j]]));
+          $select.append(option);
+        }
+      }
+    }
+
+    /**
+     * Reset variation values if all <select> elements are set to default values
+     * @return {boolean} true if reset. false otherwise.
+     */
+    function maybeResetVariationValues() {
+      console.log('maybeResetVariationValues');
+
+      // check if all state.selectedAttrs are all null
+      for (const prop in state.selectedAttrs) {
+        // if a <select> has a value, don't reset
+        if (state.selectedAttrs[prop] !== null) {
+          return false;
+        }
+      }
+
+      resetVariationValues();
+      return true;
+    }
+
+    /**
+     * Reset Variation values to their defaults
+     */
+    function resetVariationValues() {
+      console.log('resetVariationValues');
+      $productVariations.empty();
+      render(state);
+    }
+
+    /**
+     * Render Product details
+     * @param {object} data the Product data
+     */
+    function renderProductDetails(data) {
+      $songArtist.text(data.artist);
+      $songImage.attr('src', data.image);
+      $songImage.attr('alt', data.title);
+      $songLink.attr('data-song-artist', data.artist);
+      $songLink.attr('data-song-id', data.id);
+      $songLink.attr('data-song-image', data.image);
+      $songLink.attr('data-song-title', data.title);
+      $songLink.attr('data-song-url', data.url);
+      $songTitle.text(data.title);
+    }
+
+    /**
+     * Reset License Dialog
+     */
+    function reset() {
+      $songArtist.text('');
+      $songImage.attr('src', '#');
+      $songImage.attr('alt', '');
+      $songLink.attr('data-song-artist', '');
+      $songLink.attr('data-song-id', '');
+      $songLink.attr('data-song-image', '');
+      $songLink.attr('data-song-title', '');
+      $songLink.attr('data-song-url', '');
+      $songTitle.text('');
+      $productVariations.empty();
+    }
+
+    return {
+      init: init
+    }
+
+  })();
+
+  licenseDialog.init();
+
+})()
