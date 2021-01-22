@@ -43,5 +43,7 @@ add_action( 'projects', 'storefront_projects', 20 );
  * Footer
  *
  * @see ml_player()
+ * @see storefront_confirm_dialog()
  */
 add_action( 'storefront_before_footer', 'ml_player', 10 );
+add_action( 'storefront_after_footer', 'storefront_confirm_dialog', 10);

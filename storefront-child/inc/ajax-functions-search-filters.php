@@ -4,18 +4,18 @@ function ml_get_posts_handler() {
   // contentType application/json can only be read from php://input
 
   // Verify nonce
-  check_ajax_referer('ml_nonce_get_posts', 'nonce');
+  check_ajax_referer('ml_get_products_nonce', 'nonce');
 
   $result             = array();
   $result['products'] = array();
   $page               = (! empty($_POST['page'])) ? intval(sanitize_text_field($_POST['page'])) : 1;
-  $page_template       = sanitize_text_field($_POST['pageTemplate']);
+  $page_template      = sanitize_text_field($_POST['pageTemplate']);
   $filters            = json_decode(stripslashes($_POST['filters']), true); // quotes are escaped during POST
   $filter_args        = array();
   $tax_query          = array();
   $tax_query_merged   = array();
 
-  $tax_query = array( 
+  $tax_query = array(
     'relation' => 'AND',
     array(
       'field'    => 'name',
@@ -61,15 +61,21 @@ function ml_get_posts_handler() {
   // User's Favorites
   if ($page_template === 'template-favorites.php') {
     $user      = wp_get_current_user();
-    $user_id   = $user->ID; 
+    $user_id   = $user->ID;
     $favorites = get_user_meta($user_id, 'ml_favorites', true);
     $fav_ids   = array();
+
     if ( count($favorites) ) {
       foreach ($favorites as $k => $v) {
         $fav_ids[] = $k;
       }
+      $args['include'] = $fav_ids;
+    } else {
+      $result['total']         = 0;
+      $result['max_num_pages'] = 0;
+      $result['page']          = $page;
+      wp_send_json_success($result);
     }
-    $args['include'] = $fav_ids;
   }
 
   // Query

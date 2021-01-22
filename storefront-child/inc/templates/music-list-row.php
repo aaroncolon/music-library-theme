@@ -3,17 +3,17 @@
     <div class="music-list__cell">
       <div class="music-list__row-inner">
         <div class="music-list__cell-inner">
-          <button 
+          <button
             <# if ( data.isCurrentSongPlaying ) { #>
               class="btn music-list__btn-play-pause music-list__btn-play-pause--playing"
             <# } else { #>
               class="btn music-list__btn-play-pause"
             <# } #>
-            data-song-id="{{ data.id }}" 
-            data-song-url="{{{ data.preview_song_url }}}" 
-            data-song-title="{{ data.title }}" 
-            data-song-artist="{{ data.artist }}" 
-            data-song-image="{{{ data.song_image }}}" 
+            data-song-id="{{ data.id }}"
+            data-song-url="{{{ data.preview_song_url }}}"
+            data-song-title="{{ data.title }}"
+            data-song-artist="{{ data.artist }}"
+            data-song-image="{{{ data.song_image }}}"
           >
               <span class="visuallyhidden">Play</span>
           </button>
@@ -38,36 +38,43 @@
       <p>{{ data.mood }}</p>
     </div>
     <div class="music-list__cell">
-      <button 
-        type="button" 
+      <button
+        type="button"
         <# if ( data.isFavorite ) { #>
           data-is-favorite="1"
-          class="btn btn--favorite btn--is-favorite" 
+          class="btn btn--favorite btn--is-favorite"
         <# } else { #>
-          data-is-favorite="0" 
-          class="btn btn--favorite" 
+          data-is-favorite="0"
+          class="btn btn--favorite"
         <# } #>
-        data-song-id="{{ data.id }}" 
-        data-song-title="{{ data.title }}" 
-        data-song-artist="{{ data.artist }}" 
-        data-song-image="{{{ data.song_image }}}" 
+        data-song-id="{{ data.id }}"
+        data-song-title="{{ data.title }}"
+        data-song-artist="{{ data.artist }}"
+        data-song-image="{{{ data.song_image }}}"
         <# if ( ! data.isUserLoggedIn ) { #>
-          data-redirect-url="<?php esc_attr_e( add_query_arg('redirect', rawurlencode(get_the_permalink()), wc_get_page_permalink('myaccount')) ) ?>" 
+          data-redirect-url="<?php esc_attr_e( add_query_arg('redirect', rawurlencode(get_the_permalink()), wc_get_page_permalink('myaccount')) ) ?>"
+          data-dialog-title="<?php esc_attr_e( 'Add to Favorites' ) ?>"
+          data-dialog-description="<?php esc_attr_e( 'Sign in to add this song to your Favorites.' ) ?>"
+          data-mfp-src="#confirm-dialog"
         <# } #>
       >
         <span class="visuallyhidden">Favorite</span>
       </button>
-      <button 
-        type="button" 
-        class="btn btn--license" 
-        data-song-id="{{ data.id }}" 
-        data-song-title="{{ data.title }}" 
-        data-song-artist="{{ data.artist }}" 
-        data-song-image="{{{ data.song_image }}}" 
-        data-song-url="{{{ data.preview_song_url }}}" 
-        data-mfp-src="#license-dialog" 
+      <button
+        type="button"
+        class="btn btn--license"
+        data-song-id="{{ data.id }}"
+        data-song-title="{{ data.title }}"
+        data-song-artist="{{ data.artist }}"
+        data-song-image="{{{ data.song_image }}}"
+        data-song-url="{{{ data.preview_song_url }}}"
         <# if ( ! data.isUserLoggedIn ) { #>
-          data-redirect-url="<?php esc_attr_e( add_query_arg('redirect', rawurlencode(get_the_permalink()), wc_get_page_permalink('myaccount')) ) ?>" 
+          data-redirect-url="<?php esc_attr_e( add_query_arg('redirect', rawurlencode(get_the_permalink()), wc_get_page_permalink('myaccount')) ) ?>"
+          data-dialog-title="<?php esc_attr_e( 'Purchase' ) ?>"
+          data-dialog-description="<?php esc_attr_e( 'Sign in or create an account to purchase this item.' ) ?>"
+          data-mfp-src="#confirm-dialog"
+        <# } else { #>
+          data-mfp-src="#license-dialog"
         <# } #>
       >
         License

@@ -192,7 +192,7 @@ img {
 }
 
 /**
- * Music Library Filters
+ * Music List Filters
  */
 
 .music-list-filters__submit {
@@ -217,16 +217,49 @@ img {
 }
 
 
+
+
+
+
+
 /**
- * Music Library
+ * Music List
  */
+
+@media (min-width: 768px) {
+  .page-template-template-favorites .col-full,
+  .page-template-template-music-library .col-full {
+    max-width: none;
+  }
+}
+
+.music-list {
+  font-size: 0.875em;
+  text-align: center;
+}
+
+.music-list--loading:after {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  content: '\f1ce';
+  display: inline-block;
+  font-family: 'Font Awesome 5 Free';
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .music-list__row {
+  border-bottom: 1px solid #eee;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 0;
+}
+
+.music-list__row:first-child {
+  border-top: 1px solid #eee;
 }
 
 .music-list__row-inner {
@@ -258,16 +291,24 @@ img {
 
 .music-list__btn-play-pause {
   border-radius: 50%;
-  height: 45px;
+  height: 34px;
   padding: 0;
-  width: 45px;
+  width: 34px;
 }
 .music-list__btn-play-pause:before {
   /*content: '\025B8';*/
   content: '\f04b';
   font-family: 'Font Awesome 5 Free';
-  font-size: 16px;
-  line-height: 30px;
+  font-size: 12px;
+  line-height: 34px;
+  vertical-align: middle;
+}
+
+.music-list__btn-play-pause--loading:before {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  content: '\f1ce';
+  display: inline-block;
   vertical-align: middle;
 }
 
@@ -276,19 +317,24 @@ img {
   content: '\f04c';
 }
 
-.btn--favorite:before {
-  content: '\02606';
+.music-list__title,
+.music-list__artist {
+  padding-left: 10px;
+  text-align: left;
 }
 
-.btn--favorite:hover:before {
-  content: '\02605';
+
+.btn--favorite:before {
+  content: '\02606';
 }
 
 .btn--is-favorite:before {
   content: '\02605';
 }
 
-
+.music-list__pagination .btn--load-more {
+  margin: 10px 0;
+}
 
 
 
@@ -300,6 +346,7 @@ img {
   background: #fff;
   border-top: 1px solid #ccc;
   bottom: 0;
+  font-size: 0.875em;
   left: 0;
   padding: 10px;
   position: fixed;
@@ -347,7 +394,7 @@ img {
 }
 
 .player__song-image {
-  width: 80px;
+  width: 70px;
 }
 
 .player__btn-play-pause {
@@ -356,6 +403,7 @@ img {
   padding: 0;
   width: 45px;
 }
+
 .player__btn-play-pause:before {
   /*content: '\025B8';*/
   content: '\f04b';
@@ -365,16 +413,40 @@ img {
   vertical-align: middle;
 }
 
+.player__btn-play-pause--loading:before {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  content: '\f1ce';
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .player__btn-play-pause--playing:before {
   /*content: '\02223\02223';*/
   content: '\f04c';
-  font-family: 'Font Awesome 5 Free';
 }
 
 .player__waveform > wave {
   overflow: hidden !important;
 }
 
+/* Confirm Dialog */
+/* Confirm Dialog */
+/* Confirm Dialog */
+/* Confirm Dialog */
+/* Confirm Dialog */
+.confirm-dialog {
+  background: #fff;
+  margin: 0 auto;
+  max-width: 400px;
+  padding: 40px;
+  position: relative;
+  width: 100%;
+}
+
+.confirm-dialog .mfp-close {
+  color: #333;
+}
 
 /* License Dialog */
 /* License Dialog */
@@ -396,7 +468,7 @@ img {
 }
 
 .title--license-dialog {
-  
+
 }
 
 .license-dialog__song-details {
@@ -458,6 +530,18 @@ img {
   border-top: 1px solid #ccc;
   margin-top: 20px;
   padding-top: 20px;
+}
+
+.product-variations--loading:before {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  color: #333;
+  content: '\f1ce';
+  display: block;
+  font-family: 'Font Awesome 5 Free';
+  font-size: 16px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .product-variation-price {
@@ -616,29 +700,34 @@ img {
   position: relative;
 }
 
-.popup-player__product-link:after {
+.popup-player__product-link::after {
   font-family: 'Font Awesome 5 Free';
   font-size: 20px;
+  line-height: 1;
   right: 100%;
-  padding-right: 15px;
+  margin-right: 15px;
   position: absolute;
   text-align: center;
-  top: 50%;
-  -webkit-transform: translateY(-50%);
-  -ms-transform: translateY(-50%);
-  transform: translateY(-50%);
+  top: calc(50% - (20px / 2));
   vertical-align: middle;
 }
 
-.popup-player__product-link--play:after {
+.popup-player__product-link--loading::after {
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  color: #333;
+  content: '\f1ce';
+}
+
+.popup-player__product-link--play::after {
   content: '\f144';
 }
 
-.popup-player__product-link--playing:after {
+.popup-player__product-link--playing::after {
   content: '\f028';
 }
 
-.popup-player__product-link--lock:after {
+.popup-player__product-link--lock::after {
   content: '\f023';
 }
 
@@ -714,6 +803,12 @@ a:link.popup-player__product-link--playing,
 
 /* Footer */
 .site-footer {
+  background-color: transparent;
+  padding: 20px 0;
+}
+
+.site-info {
+  font-size: 0.625em;
   padding: 0;
 }
 
@@ -723,7 +818,7 @@ a:link.popup-player__product-link--playing,
 /**
  * Vertical Centering
  */
- 
+
 .center-vertical-wrap {
     position: relative;
 }
@@ -765,7 +860,7 @@ a.object-fluid {
 .object-fluid iframe,
 .object-fluid video,
 .object-fluid object {
-    height: 100%; 
+    height: 100%;
     left: 0;
     position: absolute;
     top: 0;

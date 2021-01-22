@@ -16,11 +16,11 @@ function storefront_projects() {
       if ($projects->have_posts()) :
         while ( $projects->have_posts() ) : $projects->the_post();
         ?>
-          <?php 
+          <?php
           // // Add New Row Every 5th Item
-          // if ($projects->current_post == 0 || ($projects->current_post % 4) == 0) { 
+          // if ($projects->current_post == 0 || ($projects->current_post % 4) == 0) {
           //   echo '<div class="row">';
-          // } 
+          // }
           ?>
             <div class="project-post project-post--<?php echo $projects->current_post; ?> col-xs-12 col-sm-4 matchHeight--byRow">
               <a href="javascript:;" class="open-popup-player" data-mfp-src="#popup-<?php esc_attr_e(get_the_ID()) ?>">
@@ -62,22 +62,29 @@ function storefront_projects() {
                                 $product         = wc_get_product($product_id);
                                 $product_title   = $product->get_title();
                                 $song_url        = get_field('preview_song_file', $product_id);
-                                $duration        = $product->get_attribute('duration'); 
+                                $duration        = $product->get_attribute('duration');
                                 $artists         = $product->get_attribute('artist');
                                 $require_login   = get_post_meta(get_the_ID(), 'songs_'.$i.'_require_login', true);
                                 $class_variation = (! is_user_logged_in() && $require_login === '1') ? 'lock' : 'play';
                             ?>
                                 <tr class="popup-player__table-tr popup-player__table-tr--<?php echo $class_variation; ?>">
                                   <td class="popup-player__product-name">
-                                    <a 
-                                      class="popup-player__product-link popup-player__product-link--<?php echo $class_variation; ?>" 
-                                      <?php echo (! is_user_logged_in() && $require_login === '1') ? 'title="Sign Up / Login Required"' : '' ?> 
-                                      href="<?php echo (! is_user_logged_in() && $require_login === '1') ? esc_attr( add_query_arg('redirect', rawurlencode($current_url), wc_get_page_permalink('myaccount')) ) : 'javascript:;' ?>" 
-                                      data-song-id="<?php esc_attr_e($product_id) ?>" 
-                                      data-song-url="<?php esc_attr_e($song_url) ?>" 
-                                      data-img="<?php echo get_the_post_thumbnail_url($product_id) ?>" 
-                                      data-song-artist="<?php esc_attr_e($artists) ?>" 
-                                      data-song-title="<?php esc_attr_e($product_title) ?>">
+                                    <a
+                                      class="popup-player__product-link popup-player__product-link--<?php echo $class_variation; ?>"
+                                      href="javascript:;"
+                                      <?php if (! is_user_logged_in() && $require_login === '1') : ?>
+                                        title="Sign-In Required"
+                                        data-redirect-url="<?php esc_attr_e( add_query_arg('redirect', rawurlencode($current_url), wc_get_page_permalink('myaccount')) ) ?>"
+                                        data-dialog-title="<?php esc_attr_e( 'Purchase' ) ?>"
+                                        data-dialog-description="<?php esc_attr_e( 'Sign in or create an account to listen to this item.' ) ?>"
+                                        data-mfp-src="#confirm-dialog"
+                                      <?php endif; ?>
+                                      data-song-id="<?php esc_attr_e($product_id) ?>"
+                                      data-song-url="<?php esc_attr_e($song_url) ?>"
+                                      data-img="<?php echo get_the_post_thumbnail_url($product_id) ?>"
+                                      data-song-artist="<?php esc_attr_e($artists) ?>"
+                                      data-song-title="<?php esc_attr_e($product_title) ?>"
+                                    >
                                       <?php esc_html_e(ucwords($product_title)); ?>
                                     </a>
                                   </td>
@@ -111,11 +118,11 @@ function storefront_projects() {
               </div><!-- / .mfp-hide -->
             </div><!-- / .project-post -->
 
-          <?php 
+          <?php
           // // Add Closing Row After Every 4rd Item or after the last item
-          // if ( (($projects->current_post + 1) % 4 == 0) || ($projects->current_post + 1) == $projects->found_posts) { 
+          // if ( (($projects->current_post + 1) % 4 == 0) || ($projects->current_post + 1) == $projects->found_posts) {
           //   echo '</div><!-- / .row -->';
-          // } 
+          // }
           ?>
         <?php
         endwhile;

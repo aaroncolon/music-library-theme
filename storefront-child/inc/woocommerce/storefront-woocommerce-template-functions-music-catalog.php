@@ -17,7 +17,6 @@
 function storefront_music_library_filters($taxonomies = array()) {
   $taxonomies = array('artist', 'duration', 'genre', 'instrument', 'mood', 'tempo');
 
-  $nonce_get_posts = wp_create_nonce('ml_nonce_get_posts');
   $attribute_array = array();
   $attribute_terms = array();
   $attribute_taxonomies = wc_get_attribute_taxonomies();
@@ -53,7 +52,6 @@ function storefront_music_library_filters($taxonomies = array()) {
           echo '</select>';
         echo '</div>';
       }
-      echo '<input id="nonce-get-posts" type="hidden" value="'. esc_attr($nonce_get_posts) .'">';
       echo '<input type="submit" class="button music-list-filters__submit" value="Filter">';
     echo '</form>';
   }
@@ -110,8 +108,8 @@ function storefront_music_library_filters($taxonomies = array()) {
  * @return  void
  */
 function storefront_music_library_list() {
-  ?>
-  <div id="music-list">
+?>
+  <div id="music-list" class="music-list">
     <div id="music-list__table">
       <div class="music-list__body"></div>
     </div>
@@ -123,31 +121,39 @@ function storefront_music_library_list() {
     </div>
   </div>
 
-  <!-- <div class="mfp-hide" id="popup-license-dialog"> -->
-    <div id="license-dialog" class="license-dialog mfp-hide">
-      <h3 class="title--license-dialog">License Details</h3>
-      <div class="license-dialog__song-details clear">
-        <div class="license-dialog__song-image">
-          <a href="javascript:;" class="license-dialog__song-link">
-            <img src="#" alt="" />
-          </a>
-        </div>
-        <div class="license-dialog__song-text">
-          <div class="license-dialog__song-title"></div>
-          <div class="license-dialog__song-artist"></div>
-        </div>
+  <div id="license-dialog" class="license-dialog mfp-hide">
+    <h3 class="title--license-dialog">License Details</h3>
+    <div class="license-dialog__song-details clear">
+      <div class="license-dialog__song-image">
+        <a href="javascript:;" class="license-dialog__song-link">
+          <img src="#" alt="" />
+        </a>
       </div>
-      <div class="license-form-wrap">
-        <form id="license-form" class="license-form" action="" method="post">
-          <div id="product-variations" class="product-variations"></div>
-
-          <div class="license-form__summary">
-            <div id="product-variation-price" class="product-variation-price"></div>
-            <button id="btn-add-to-cart" class="btn btn--add-to-cart" disabled>Add to Cart</button>
-          </div>
-        </form>
+      <div class="license-dialog__song-text">
+        <div class="license-dialog__song-title"></div>
+        <div class="license-dialog__song-artist"></div>
       </div>
     </div>
-  <!-- </div> -->
-  <?php
+    <div class="license-form-wrap">
+      <form id="license-form" class="license-form" action="" method="post">
+        <div id="product-variations" class="product-variations"></div>
+
+        <div class="license-form__summary">
+          <div id="product-variation-price" class="product-variation-price"></div>
+          <button id="btn-add-to-cart" class="btn btn--add-to-cart" disabled>Add to Cart</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="confirm-dialog" class="confirm-dialog music-list__confirm-dialog mfp-hide">
+    <h3 id="confirm-dialog__title" class="confirm-dialog__title title--confirm-dialog">Sign-In Required</h3>
+    <p id="confirm-dialog__description" class="confirm-dialog__description">You must sign in to perform this action.</p>
+    <div>
+      <button id="confirm-dialog__reject" class="confirm-dialog__btn confirm-dialog__btn--reject">Cancel</button>
+      <button id="confirm-dialog__accept" class="confirm-dialog__btn confirm-dialog__btn--accept">Sign In</button>
+    </div>
+  </div>
+
+<?php
 }

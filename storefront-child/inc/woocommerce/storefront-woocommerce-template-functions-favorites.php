@@ -68,8 +68,8 @@ function storefront_favorites_filters($taxonomies = array()) {
  * @return  void
  */
 function storefront_favorites_list() {
-  ?>
-  <div id="music-list">
+?>
+  <div id="music-list" class="music-list">
     <div id="music-list__table">
       <div class="music-list__body"></div>
     </div>
@@ -81,31 +81,30 @@ function storefront_favorites_list() {
     </div>
   </div>
 
-  <!-- <div class="mfp-hide" id="popup-license-dialog"> -->
-    <div id="license-dialog" class="license-dialog mfp-hide">
-      <h3 class="title--license-dialog">License Details</h3>
-      <div class="license-dialog__song-details clear">
-        <div class="license-dialog__song-image">
-          <a href="javascript:;" class="license-dialog__song-link">
-            <img src="#" alt="" />
-          </a>
-        </div>
-        <div class="license-dialog__song-text">
-          <div class="license-dialog__song-title"></div>
-          <div class="license-dialog__song-artist"></div>
-        </div>
+  <div id="license-dialog" class="license-dialog mfp-hide">
+    <h3 class="title--license-dialog">License Details</h3>
+    <div class="license-dialog__song-details clear">
+      <div class="license-dialog__song-image">
+        <a href="javascript:;" class="license-dialog__song-link">
+          <img src="#" alt="" />
+        </a>
       </div>
-      <div class="license-form-wrap">
-        <form id="license-form" class="license-form" action="" method="post">
-          <div id="product-variations" class="product-variations"></div>
-
-          <div class="license-form__summary">
-            <div id="product-variation-price" class="product-variation-price"></div>
-            <button id="btn-add-to-cart" class="btn btn--add-to-cart" disabled>Add to Cart</button>
-          </div>
-        </form>
+      <div class="license-dialog__song-text">
+        <div class="license-dialog__song-title"></div>
+        <div class="license-dialog__song-artist"></div>
       </div>
     </div>
-  <!-- </div> -->
-  <?php
+    <div class="license-form-wrap">
+      <form id="license-form" class="license-form" action="" method="post">
+        <div id="product-variations" class="product-variations"></div>
+
+        <div class="license-form__summary">
+          <div id="product-variation-price" class="product-variation-price"></div>
+          <button id="btn-add-to-cart" class="btn btn--add-to-cart" disabled>Add to Cart</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<?php
 }

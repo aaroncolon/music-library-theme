@@ -50,45 +50,67 @@ function ml_enqueue_scripts() {
 	/**
 	 * Scripts
 	 */
-	wp_enqueue_script( 'ml-events', get_stylesheet_directory_uri() . '/assets/js/Events.js', array(), '', true);
-	wp_enqueue_script( 'ml-utilities', get_stylesheet_directory_uri() . '/assets/js/Utilities.js', array(), '', true);
-	wp_enqueue_script( 'ml-favorites', get_stylesheet_directory_uri() . '/assets/js/Favorites.js', array('jquery'), '', true);
 
-	wp_enqueue_script( 'ml-global', get_stylesheet_directory_uri() . '/assets/js/global.js', array(), '', true);
-	wp_localize_script( 'ml-global', 'ml_js_data', array( 
+// 	wp_enqueue_script( 'ml-events', get_stylesheet_directory_uri() . '/assets/js/src/Events.js', array(), '', true);
+// 	wp_enqueue_script( 'ml-utilities', get_stylesheet_directory_uri() . '/assets/js/src/Utilities.js', array(), '', true);
+// 	wp_enqueue_script( 'ml-favorites', get_stylesheet_directory_uri() . '/assets/js/src/Favorites.js', array('jquery'), '', true);
+//
+// 	wp_enqueue_script( 'ml-global', get_stylesheet_directory_uri() . '/assets/js/src/global.js', array(), '', true);
+// 	wp_localize_script( 'ml-global', 'ml_js_data', array(
+// 		'ajax_url'                    => admin_url('admin-ajax.php'),
+// 		'current_song'                => array('id' => 0, 'isPlaying' => false),
+// 		'default_song'                => ml_player_default_song(),
+// 		'user_logged_in'              => is_user_logged_in(),
+// 		'page_template_slug'          => get_page_template_slug(),
+// 		'nonce_get_favorites'         => wp_create_nonce('ml_get_favorites_nonce'),
+// 		'nonce_create_favorite'       => wp_create_nonce('ml_create_favorite_nonce'),
+// 		'nonce_delete_favorite'       => wp_create_nonce('ml_delete_favorite_nonce'),
+// 		'nonce_get_product'           => wp_create_nonce('ml_get_product_nonce'),
+// 		'nonce_add_to_cart_variation' => wp_create_nonce('ml_add_to_cart_variation_nonce'))
+// 	);
+//
+// 	// Music Library || Projects || Favorites
+// 	if ( is_page_template( array('template-music-library.php', 'template-favorites.php', 'template-projects.php') ) ) :
+// 		wp_enqueue_script( 'ml-magnific-popup', get_stylesheet_directory_uri() . '/assets/js/src/vendor/magnific-popup/magnific-popup.min.js', array('jquery'), '', true);
+// 		wp_enqueue_script( 'ml-wavesurfer', get_stylesheet_directory_uri() . '/assets/js/src/vendor/wavesurfer/wavesurfer.min.js', array('jquery'), '', true);
+// 		wp_enqueue_script( 'ml-player', get_stylesheet_directory_uri() . '/assets/js/src/player.js', array('jquery'), '', true);
+// 		wp_enqueue_script( 'ml-favorites-header', get_stylesheet_directory_uri() . '/assets/js/src/favoritesHeader.js', array('jquery'), '', true);
+// 	endif;
+//
+// 	// Music Library || Favorites
+// 	if ( is_page_template( array('template-music-library.php', 'template-favorites.php') ) ) :
+// 		wp_enqueue_script( 'ml-music-library-list', get_stylesheet_directory_uri() . '/assets/js/src/musicLibraryList.js', array('jquery'), '', true);
+// 		wp_enqueue_script( 'ml-music-library-filters', get_stylesheet_directory_uri() . '/assets/js/src/musicLibraryFilters.js', array('jquery', 'wp-util'), '', true);
+// 		wp_enqueue_script( 'ml-license-dialog', get_stylesheet_directory_uri() . '/assets/js/src/licenseDialog.js', array('jquery'), '', true);
+// 	endif;
+//
+// 	// Projects
+// 	if (is_page_template('template-projects.php')) :
+// 		wp_enqueue_script( 'ml-matchheight', get_stylesheet_directory_uri() . '/assets/js/src/vendor/match-height/jquery.matchHeight-min.js', array('jquery'), '', true);
+// 		wp_enqueue_script( 'ml-popup-player', get_stylesheet_directory_uri() . '/assets/js/src/popupPlayer.js', array('jquery'), '', true);
+// 	endif;
+//
+
+	wp_enqueue_script( 'ml-magnific-popup', get_stylesheet_directory_uri() . '/assets/js/src/vendor/magnific-popup/magnific-popup.min.js', array('jquery'), '', true);
+	wp_enqueue_script( 'ml-wavesurfer', get_stylesheet_directory_uri() . '/assets/js/src/vendor/wavesurfer/wavesurfer.min.js', array('jquery'), '', true);
+	wp_enqueue_script( 'ml-matchheight', get_stylesheet_directory_uri() . '/assets/js/src/vendor/match-height/jquery.matchHeight-min.js', array('jquery'), '', true);
+
+	wp_enqueue_script( 'ml-main', get_stylesheet_directory_uri() . '/assets/js/dist/bundle.js', array('jquery', 'wp-util'), '', true);
+	wp_localize_script( 'ml-main', 'ml_js_data', array(
 		'ajax_url'                    => admin_url('admin-ajax.php'),
 		'current_song'                => array('id' => 0, 'isPlaying' => false),
 		'default_song'                => ml_player_default_song(),
 		'user_logged_in'              => is_user_logged_in(),
 		'page_template_slug'          => get_page_template_slug(),
+		'nonce_get_products'          => wp_create_nonce('ml_get_products_nonce'),
 		'nonce_get_favorites'         => wp_create_nonce('ml_get_favorites_nonce'),
 		'nonce_create_favorite'       => wp_create_nonce('ml_create_favorite_nonce'),
 		'nonce_delete_favorite'       => wp_create_nonce('ml_delete_favorite_nonce'),
 		'nonce_get_product'           => wp_create_nonce('ml_get_product_nonce'),
-		'nonce_add_to_cart_variation' => wp_create_nonce('ml_add_to_cart_variation_nonce'))
+		'nonce_add_to_cart_variation' => wp_create_nonce('ml_add_to_cart_variation_nonce'),
+		'customer_type_individual'    => true) // enable Individual Customer Type handling
 	);
 
-	// Music Library || Projects || Favorites
-	if ( is_page_template( array('template-music-library.php', 'template-favorites.php', 'template-projects.php') ) ) :
-		wp_enqueue_script( 'ml-magnific-popup', get_stylesheet_directory_uri() . '/assets/js/vendor/magnific-popup/magnific-popup.min.js', array('jquery'), '', true);
-		wp_enqueue_script( 'ml-wavesurfer', get_stylesheet_directory_uri() . '/assets/js/vendor/wavesurfer/wavesurfer.min.js', array('jquery'), '', true);
-		wp_enqueue_script( 'ml-player', get_stylesheet_directory_uri() . '/assets/js/player.js', array('jquery'), '', true);
-		wp_enqueue_script( 'ml-favorites-header', get_stylesheet_directory_uri() . '/assets/js/favoritesHeader.js', array('jquery'), '', true);
-	endif;
-
-	// Music Library || Favorites
-	if ( is_page_template( array('template-music-library.php', 'template-favorites.php') ) ) :
-		wp_enqueue_script( 'ml-music-library-list', get_stylesheet_directory_uri() . '/assets/js/musicLibraryList.js', array('jquery'), '', true);
-		wp_enqueue_script( 'ml-music-library-filters', get_stylesheet_directory_uri() . '/assets/js/musicLibraryFilters.js', array('jquery', 'wp-util'), '', true);
-		wp_enqueue_script( 'ml-license-dialog', get_stylesheet_directory_uri() . '/assets/js/licenseDialog.js', array('jquery'), '', true);
-	endif;
-
-	// Projects
-	if (is_page_template('template-projects.php')) :
-		wp_enqueue_script( 'ml-matchheight', get_stylesheet_directory_uri() . '/assets/js/vendor/match-height/jquery.matchHeight-min.js', array('jquery'), '', true);
-		wp_enqueue_script( 'ml-popup-player', get_stylesheet_directory_uri() . '/assets/js/popupPlayer.js', array('jquery'), '', true);
-	endif;
-	
 }
 add_action( 'wp_enqueue_scripts', 'ml_enqueue_scripts', 20 );
 
@@ -197,6 +219,7 @@ add_filter( 'storefront_credit_link', 'ml_storefront_credit_link', 10, 1 );
 
 if ( class_exists('woocommerce') ) {
 	require 'inc/woocommerce/storefront-woocommerce-template-functions.php';
+	require 'inc/woocommerce/storefront-woocommerce-template-functions-dialogs.php';
 	require 'inc/woocommerce/storefront-woocommerce-template-functions-music-catalog.php';
 	require 'inc/woocommerce/storefront-woocommerce-template-functions-favorites.php';
 	require 'inc/woocommerce/storefront-woocommerce-template-functions-projects.php';
@@ -277,7 +300,7 @@ function ml_wc_register_form_redirect() {
 /**
  * Get Page ID by Template Name
  * @param {string} full filename of template
- * @return {array} IDs of pages assigned the template 
+ * @return {array} IDs of pages assigned the template
  */
 function ml_get_id_by_template($templateName) {
 	$args = array(
